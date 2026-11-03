@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import postgres from "postgres";
 import { z } from "zod";
+import { validateSupabaseConnectionString } from "../../../lib/connection";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -23,27 +24,20 @@ export async function POST(request: NextRequest) {
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Dados inválidos. Confirme a conexão, os arquivos SQL e a frase de confirmação." }, { status: 400 });
-  }
-
-  const { connectionString, migrations } = parsed.data;
-  let host = "";
+    return NextResponse.json({ error: "Dados inválidos. Confirme a conexão, os arquivos SQL e a frase de confirmação." }, { s  let validatedConnection: string;
   try {
-    const parsedUrl = new URL(connectionString);
-    host = parsedUrl.hostname.toLowerCase();
-  } catch {
-    return NextResponse.json({ error: "Connection string PostgreSQL inválida." }, { status: 400 });
-  }
-
-  // Restringe o destino a hosts oficiais do Supabase para reduzir risco de SSRF.
-  if (!/^db\.[a-z0-9-]+\.supabase\.co$/.test(host) && !/^[a-z0-9-]+\.pooler\.supabase\.com$/.test(host)) {
-    return NextResponse.json({ error: "Por segurança, conecte-se a um host PostgreSQL oficial do Supabase." }, { status: 400 });
+    ({ connectionString: validatedConnection } = validateSupabaseConnectionString(connectionString));
+  } catch (error) {
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : "Connection string inválida."
+    }, { status: 400 });
+  }necte-se a um host PostgreSQL oficial do Supabase." }, { status: 400 });
   }
 
   let db: ReturnType<typeof postgres> | undefined;
   const completed: string[] = [];
   try {
-    db = postgres(connectionString, {
+    db = postgres(validatedConnection, {
       max: 1,
       connect_timeout: 15,
       idle_timeout: 5,

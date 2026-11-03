@@ -9,14 +9,13 @@ export const maxDuration = 300;
 const schema = z.object({
   connectionString: z.string().min(20).max(2000),
   migrations: z.array(z.object({
-    path: z.string().regex(/^supabase\/migrations\/[\w.-]+\.sql$/),
+    path: z.string().regex(/^supabase\\/migrations\\/[\\w.-]+\\.sql$/),
     sql: z.string().min(1).max(2_000_000)
   })).min(1).max(500),
   confirm: z.literal("APLICAR MIGRAÇÕES")
 });
 
 export async function POST(request: NextRequest) {
-  // Mitiga envio cross-site em implantações acidentais; o uso recomendado continua local.
   const origin = request.headers.get("origin");
   if (origin && origin !== request.nextUrl.origin) {
     return NextResponse.json({ error: "Origem não autorizada." }, { status: 403 });
@@ -24,14 +23,17 @@ export async function POST(request: NextRequest) {
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Dados inválidos. Confirme a conexão, os arquivos SQL e a frase de confirmação." }, { s  let validatedConnection: string;
+    return NextResponse.json({ error: "Dados inválidos. Confirme a conexão, os arquivos SQL e a frase de confirmação." }, { status: 400 });
+  }
+
+  const { connectionString, migrations } = parsed.data;
+  let validatedConnection: string;
   try {
     ({ connectionString: validatedConnection } = validateSupabaseConnectionString(connectionString));
   } catch (error) {
     return NextResponse.json({
       error: error instanceof Error ? error.message : "Connection string inválida."
     }, { status: 400 });
-  }necte-se a um host PostgreSQL oficial do Supabase." }, { status: 400 });
   }
 
   let db: ReturnType<typeof postgres> | undefined;
@@ -47,7 +49,6 @@ export async function POST(request: NextRequest) {
 
     await db`select 1`;
     for (const migration of migrations) {
-      // O operador deve revisar os SQLs apresentados na interface antes da confirmação.
       await db.unsafe(migration.sql);
       completed.push(migration.path);
     }

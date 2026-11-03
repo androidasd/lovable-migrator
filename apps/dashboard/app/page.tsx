@@ -14,6 +14,7 @@ export default function Home() {
   const [result, setResult] = useState<MigrationResult | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState("");
 
   const totalSqlBytes = useMemo(() => report?.migrations.reduce((n, m) => n + m.sql.length, 0) ?? 0, [report]);
 
@@ -28,6 +29,25 @@ export default function Home() {
       setReport(data);
     } catch (e) { setError(e instanceof Error ? e.message : "Falha na análise."); }
     finally { setBusy(false); }
+  }
+
+  async function testConnection() {
+    if (!connectionString.trim()) return;
+    setBusy(true); setError(""); setConnectionStatus("");
+    try {
+      const response = await fetch("/api/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ connectionString })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Não foi possível testar a conexão.");
+      setConnectionStatus(data.message || "Conexão validada.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Falha ao testar conexão.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function migrate() {
@@ -104,7 +124,9 @@ export default function Home() {
           <p className="muted small">Encontre em Supabase → Project Settings → Database → Connection string. Prefira o modo Session pooler se sua rede não aceitar conexão direta. A string é usada somente nesta requisição e não é salva pelo app.</p>
           <div className="notice danger">Atenção: migrações SQL podem criar, alterar ou apagar estruturas e dados. Faça backup do destino e revise cada arquivo antes de continuar.</div>
           <label className="confirm"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} /> Revisei os arquivos SQL e tenho backup do projeto Supabase de destino.</label>
-          <button className="primary" onClick={migrate} disabled={busy || !confirmed || !connectionString.trim() || !report.migrations.length}>{busy ? "Aplicando..." : "Aplicar migrações SQL no Supabase"}</button>
+          <button className="secondary" onClick={testConnection} disabled={busy || !connectionString.trim()}>{busy ? "Verificando..." : "Testar conexão"}</button>
+          {connectionStatus && <div className="notice success">{connectionStatus}</div>}
+          <button className="primary" onClick={migrate} disabled={busy || !confirmed || !connectionString.trim() || !report.migrations.length}>{busy ? "Processando..." : "Aplicar migrações SQL no Supabase"}</button>
           {result && <div className={result.success ? "notice success" : "notice danger"}><strong>{result.success ? "Migração concluída" : "Migração interrompida"}</strong><p>{result.message}</p>{result.completed?.length > 0 && <p>{result.completed.length} arquivo(s) aplicado(s): {result.completed.join(", ")}</p>}</div>}
         </section>
       </>}

@@ -1,0 +1,28 @@
+body {
+  width: 300px;
+  margin: 0;
+  background: #10131c;
+  color: #f4f5f8;
+  font: 14px system-ui, sans-serif;
+}
+main { padding: 20px; }
+h1 { font-size: 20px; margin: 0 0 6px; }
+p { color: #aeb5c5; }
+.status {
+  margin: 18px 0;
+  padding: 10px;
+  border: 1px solid #315d49;
+  border-radius: 9px;
+  color: #8fe0b2;
+}
+.hint { font-size: 12px; line-height: 1.5; }
+button {
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  background: #7866f5;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}

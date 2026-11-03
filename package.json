@@ -1,0 +1,14 @@
+{
+  "name": "lovable-migrator",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "scan": "pnpm --filter @lovable-migrator/scanner scan",
+    "build": "pnpm -r build"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  }
+}

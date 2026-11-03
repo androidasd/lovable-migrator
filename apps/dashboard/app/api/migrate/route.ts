@@ -15,14 +15,29 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  // Mitiga envio cross-site em implantações acidentais; o uso recomendado continua local.
+  const origin = request.headers.get("origin");
+  if (origin && origin !== request.nextUrl.origin) {
+    return NextResponse.json({ error: "Origem não autorizada." }, { status: 403 });
+  }
+
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Dados inválidos. Confirme a conexão, os arquivos SQL e a frase de confirmação." }, { status: 400 });
   }
 
   const { connectionString, migrations } = parsed.data;
-  if (!/^postgres(ql)?:\/\//i.test(connectionString)) {
-    return NextResponse.json({ error: "Use uma connection string PostgreSQL do projeto Supabase de destino." }, { status: 400 });
+  let host = "";
+  try {
+    const parsedUrl = new URL(connectionString);
+    host = parsedUrl.hostname.toLowerCase();
+  } catch {
+    return NextResponse.json({ error: "Connection string PostgreSQL inválida." }, { status: 400 });
+  }
+
+  // Restringe o destino a hosts oficiais do Supabase para reduzir risco de SSRF.
+  if (!/^db\.[a-z0-9-]+\.supabase\.co$/.test(host) && !/^[a-z0-9-]+\.pooler\.supabase\.com$/.test(host)) {
+    return NextResponse.json({ error: "Por segurança, conecte-se a um host PostgreSQL oficial do Supabase." }, { status: 400 });
   }
 
   let db: ReturnType<typeof postgres> | undefined;
@@ -38,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     await db`select 1`;
     for (const migration of migrations) {
-      // A SQL file is trusted project input: the operator must review it before confirmation.
+      // O operador deve revisar os SQLs apresentados na interface antes da confirmação.
       await db.unsafe(migration.sql);
       completed.push(migration.path);
     }

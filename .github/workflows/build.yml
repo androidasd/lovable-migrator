@@ -9,19 +9,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           version: 9.15.4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
-          node-version: 20
+          node-version: 22
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm --filter @lovable-migrator/scanner build
       - run: pnpm --filter @lovable-migrator/dashboard build

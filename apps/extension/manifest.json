@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Lovable Migrator",
+  "version": "0.1.0",
+  "description": "Assistente para análise e migração segura de projetos Lovable.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Lovable Migrator"
+  },
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://lovable.dev/*",
+    "https://*.lovable.app/*"
+  ]
+}

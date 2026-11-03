@@ -138,7 +138,7 @@ export default function Home() {
       </>}
 
       {error && <div className="notice danger">{error}</div>}
-      <footer>Lovable Migrator · MVP 0.2 · Não transfere automaticamente Auth, Storage ou dados de tabelas nesta versão.</footer>
+      <footer>Lovable Migrator · 0.3 · Não transfere automaticamente Auth, Storage ou dados de tabelas nesta versão.</footer>
     </main>
   );
 }
